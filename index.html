@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Users API</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; margin: 0; padding: 24px; background: #f5f7fa; color: #222; }
+    h1 { margin: 0 0 16px; }
+    .controls { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+    button { padding: 8px 14px; border: none; border-radius: 6px; background: #2563eb; color: #fff; cursor: pointer; font-size: 14px; }
+    button:hover { background: #1d4ed8; }
+    button:disabled { opacity: .6; cursor: wait; }
+    .status { margin-bottom: 12px; font-size: 14px; color: #555; }
+    .table-wrap { overflow-x: auto; background: #fff; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,.08); }
+    table { width: 100%; border-collapse: collapse; min-width: 700px; }
+    th, td { padding: 10px 12px; text-align: left; border-bottom: 1px solid #eee; font-size: 14px; }
+    th { background: #f1f5f9; }
+    tr:hover td { background: #f9fafb; }
+    .error { color: #dc2626; }
+    @media (max-width: 600px) {
+      body { padding: 12px; }
+      table { min-width: 600px; }
+    }
+  </style>
+</head>
+<body>
+  <h1>Users</h1>
+  <div class="controls">
+    <button id="loadRemote">Load Remote API</button>
+    <button id="loadDummy">Load Dummy API</button>
+  </div>
+  <div class="status" id="status">Click a button to load users.</div>
+  <div class="table-wrap">
+    <table>
+      <thead>
+        <tr>
+          <th>ID</th><th>Name</th><th>Username</th><th>Email</th><th>Phone</th><th>Website</th><th>City</th>
+        </tr>
+      </thead>
+      <tbody id="tbody"></tbody>
+    </table>
+  </div>
+
+  <script>
+    const tbody = document.getElementById('tbody');
+    const status = document.getElementById('status');
+
+    const dummyUsers = [
+      { id: 1, name: 'Alice Johnson', username: 'alice', email: 'alice@example.com', phone: '123-456-7890', website: 'alice.dev', address: { city: 'New York' } },
+      { id: 2, name: 'Bob Smith', username: 'bob', email: 'bob@example.com', phone: '234-567-8901', website: 'bob.dev', address: { city: 'Los Angeles' } },
+      { id: 3, name: 'Charlie Brown', username: 'charlie', email: 'charlie@example.com', phone: '345-678-9012', website: 'charlie.dev', address: { city: 'Chicago' } }
+    ];
+
+    function render(users) {
+      tbody.innerHTML = '';
+      users.forEach(u => {
+        const tr = document.createElement('tr');
+        tr.innerHTML = `<td>${u.id}</td><td>${u.name}</td><td>${u.username}</td><td>${u.email}</td><td>${u.phone}</td><td>${u.website}</td><td>${u.address?.city ?? ''}</td>`;
+        tbody.appendChild(tr);
+      });
+    }
+
+    async function loadRemote() {
+      const btn = document.getElementById('loadRemote');
+      btn.disabled = true;
+      status.textContent = 'Loading remote users...';
+      status.classList.remove('error');
+      try {
+        const res = await fetch('https://jsonplaceholder.typicode.com/users');
+        if (!res.ok) throw new Error('HTTP ' + res.status);
+        const data = await res.json();
+        render(data);
+        status.textContent = `Loaded ${data.length} users from remote API.`;
+      } catch (e) {
+        status.textContent = 'Failed to load remote: ' + e.message;
+        status.classList.add('error');
+      } finally {
+        btn.disabled = false;
+      }
+    }
+
+    function loadDummy() {
+      render(dummyUsers);
+      status.textContent = `Loaded ${dummyUsers.length} users from dummy API.`;
+      status.classList.remove('error');
+    }
+
+    document.getElementById('loadRemote').addEventListener('click', loadRemote);
+    document.getElementById('loadDummy').addEventListener('click', loadDummy);
+  </script>
+</body>
+</html>
